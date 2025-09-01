@@ -1,29 +1,29 @@
-import { useEffect, useState } from "react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { useNavigate } from "react-router-dom";
-import { 
-  Heart, 
-  Users, 
-  Clock, 
-  Shield, 
-  MessageSquare, 
-  Stethoscope,
-  ChevronRight,
+import {
   Activity,
-  UserCheck,
   AlertTriangle,
-  Sparkles,
   Bot,
   Camera,
+  ChevronRight,
+  Clock,
+  MessageSquare,
+  Shield,
+  Sparkles,
+  Stethoscope,
+  UserCheck,
+  Users,
   Zap
 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const Index = () => {
   const navigate = useNavigate();
   const [showSplash, setShowSplash] = useState(true);
   const [role, setRole] = useState<string | null>(null);
+  const [backendMessage, setBackendMessage] = useState('');
 
   useEffect(() => {
     // Check localStorage for role
@@ -37,6 +37,13 @@ const Index = () => {
     }, 2000);
     return () => clearTimeout(timer);
   }, [navigate]);
+
+  useEffect(() => {
+    fetch('http://localhost:5000/api/hello')
+      .then(res => res.json())
+      .then(data => setBackendMessage(data.message))
+      .catch(() => setBackendMessage('Could not connect to backend'));
+  }, []);
 
   if (showSplash) {
     return (
@@ -52,6 +59,14 @@ const Index = () => {
 
   return (
   <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-black relative">
+      {/* Backend message display */}
+      <div style={{position: 'fixed', top: 0, left: 0, width: '100%', zIndex: 1000}}>
+        {backendMessage && (
+          <div className="bg-primary text-white text-center py-2 shadow-lg">
+            Backend: {backendMessage}
+          </div>
+        )}
+      </div>
       <img src="/image3.png" alt="Diagnosure Logo" className="absolute inset-0 w-full h-full object-cover opacity-10 pointer-events-none z-0" style={{filter:'blur(2px)'}} />
     <img src="/image3.png" alt="Diagnosure Logo" className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-1/2 max-w-lg h-auto object-contain opacity-10 pointer-events-none z-0" style={{filter:'blur(2px)'}} />
       {/* Header */}

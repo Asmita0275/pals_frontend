@@ -1,13 +1,8 @@
-import { useState, useRef } from "react";
-import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
+import { AlertTriangle, Bot, Camera, Stethoscope, User as UserIcon } from "lucide-react";
+import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Camera, Bot, User as UserIcon, Stethoscope } from "lucide-react";
-import { AlertTriangle } from "lucide-react";
 
 // ...existing code...
 const hospitals = [
@@ -99,20 +94,39 @@ const PatientTriage = () => {
         setCurrentQuestion(currentQuestion + 1);
       }, 500);
     } else {
-      // Send patient info to backend for AI prioritization
-      fetch("http://localhost:8000/add_patient", {
+      // Send patient info to Flask backend for AI prioritization
+      fetch("http://localhost:5000/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          sno: Date.now().toString(),
-          name: info.name,
-          issue: info.symptoms
-        })
+        body: JSON.stringify({ message: info.symptoms })
       })
         .then(res => res.json())
         .then(data => {
-          setAiQueue(data.records || []);
-          addMessage({ type: "bot", content: "Thank you! Your details have been sent to the doctor. Here is the AI-prioritized patient queue:" });
+          addMessage({ type: "bot", content: data.response || "Thank you! Your details have been sent to the doctor." });
+        });
+
+      // Send image to backend if uploaded
+      if (uploadedImage) {
+        fetch("http://localhost:5000/api/image-analyze", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ image_path: info.imageUpload })
+        })
+          .then(res => res.json())
+          .then(data => {
+            addMessage({ type: "bot", content: data.result || "Image analyzed." });
+          });
+      }
+
+      // Send patient registration to backend
+      fetch("http://localhost:5000/api/patient/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(info)
+      })
+        .then(res => res.json())
+        .then(data => {
+          // Optionally handle registration response
         });
     }
   };

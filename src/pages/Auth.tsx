@@ -1,13 +1,13 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Heart, Mail, Lock, User as UserIcon, ArrowLeft } from "lucide-react";
-import type { User, Session } from '@supabase/supabase-js';
+import type { Session, User } from '@supabase/supabase-js';
+import { ArrowLeft, Lock, Mail, User as UserIcon } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const Auth = () => {
   // State for patient and doctor details
@@ -67,7 +67,6 @@ const Auth = () => {
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (password !== confirmPassword) {
-      // Skip error toast, just redirect
       localStorage.setItem('userRole', role);
       if (role === 'patient') {
         navigate('/patienttriage');
@@ -78,43 +77,52 @@ const Auth = () => {
     }
 
     setLoading(true);
-    const redirectUrl = `${window.location.origin}/`;
-    await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: redirectUrl,
-        data: {
-          full_name: fullName,
-          role: role,
-        }
+    const endpoint = role === 'patient' ? 'patient/signup' : 'doctor/signup';
+    const payload = role === 'patient'
+      ? { username: fullName, email, password, age: patientDetails.age, gender: patientDetails.gender, address: patientDetails.address, phone: patientDetails.phone }
+      : { username: fullName, email, password, specialization: doctorDetails.specialization, hospital: doctorDetails.hospital, hospitalAddress: doctorDetails.hospitalAddress, phone: doctorDetails.phone };
+    try {
+      const res = await fetch(`http://localhost:5000/api/${endpoint}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      // You can handle backend response here
+      localStorage.setItem('userRole', role);
+      if (role === 'patient') {
+        navigate('/patienttriage');
+      } else {
+        navigate('/doctordashboard');
       }
-    });
-    setLoading(false);
-    // Always redirect after signup
-    localStorage.setItem('userRole', role);
-    if (role === 'patient') {
-      navigate('/patienttriage');
-    } else {
-      navigate('/doctordashboard');
+    } catch (err) {
+      // Handle error
     }
+    setLoading(false);
   };
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    setLoading(false);
-    // Always redirect after login
-    localStorage.setItem('userRole', role);
-    if (role === 'patient') {
-      navigate('/patienttriage');
-    } else {
-      navigate('/doctordashboard');
+    const endpoint = role === 'patient' ? 'patient/signup' : 'doctor/signup';
+    const payload = { email, password };
+    try {
+      const res = await fetch(`http://localhost:5000/api/${endpoint}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      localStorage.setItem('userRole', role);
+      if (role === 'patient') {
+        navigate('/patienttriage');
+      } else {
+        navigate('/doctordashboard');
+      }
+    } catch (err) {
+      // Handle error
     }
+    setLoading(false);
   };
 
   const resetForm = () => {

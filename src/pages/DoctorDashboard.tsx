@@ -1,23 +1,23 @@
-import { useState } from "react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { useNavigate } from "react-router-dom";
-import { 
-  ArrowLeft, 
-  Search, 
-  Bell, 
-  Filter,
-  Clock,
-  AlertCircle,
-  CheckCircle,
-  User,
-  Calendar,
-  FileText,
+import {
   Activity,
-  MoreHorizontal
+  AlertCircle,
+  ArrowLeft,
+  Bell,
+  Calendar,
+  CheckCircle,
+  Clock,
+  FileText,
+  Filter,
+  MoreHorizontal,
+  Search,
+  User
 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 interface Patient {
   id: string;
@@ -39,49 +39,21 @@ const DoctorDashboard = () => {
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Load patients from localStorage (sent from chatbot)
-  const storedPatients = JSON.parse(localStorage.getItem('patients') || '[]');
-  const mockPatients: Patient[] = [
-    {
-      id: "1",
-      name: "Sarah Johnson",
-      age: 34,
-      triageLevel: "emergency",
-      symptoms: "Severe chest pain, shortness of breath",
-      waitTime: "5 min",
-      aiSummary: "34-year-old female presenting with acute chest pain and dyspnea. Symptoms started 30 minutes ago. Pain rated 9/10, radiating to left arm. Requires immediate cardiac evaluation.",
-      vitals: { bloodPressure: "160/95", heartRate: "110", temperature: "98.6°F" }
-    },
-    {
-      id: "2",
-      name: "Michael Chen",
-      age: 28,
-      triageLevel: "warning",
-      symptoms: "Persistent headache, nausea",
-      waitTime: "15 min",
-      aiSummary: "28-year-old male with severe headache lasting 6 hours, associated with nausea and photophobia. No fever. History of migraines. Moderate priority for neurological assessment."
-    },
-    {
-      id: "3",
-      name: "Emma Williams",
-      age: 45,
-      triageLevel: "safe",
-      symptoms: "Minor cut on finger, needs stitches",
-      waitTime: "30 min",
-      aiSummary: "45-year-old female with 2cm laceration on index finger from kitchen accident. Wound is clean, minimal bleeding, no signs of infection. Routine wound care required."
-    },
-    {
-      id: "4",
-      name: "Robert Davis",
-      age: 52,
-      triageLevel: "warning",
-      symptoms: "Difficulty breathing, wheezing",
-      waitTime: "8 min",
-      aiSummary: "52-year-old male with acute asthma exacerbation. Known asthmatic, ran out of inhaler 2 days ago. Moderate respiratory distress, requires bronchodilator therapy."
-    }
-  ];
-  // Merge stored patients with mock patients
-  const allPatients = [...storedPatients, ...mockPatients];
+  // Fetch doctor profile and patient queue from backend
+  const [doctorProfile, setDoctorProfile] = useState<any>(null);
+  const [allPatients, setAllPatients] = useState<Patient[]>([]);
+
+  useEffect(() => {
+    // Fetch doctor profile
+    fetch('http://localhost:5000/api/doctor/profile')
+      .then(res => res.json())
+      .then(data => setDoctorProfile(data.doctor));
+
+    // Fetch patient queue (add this endpoint to backend if needed)
+    fetch('http://localhost:5000/api/patient/queue')
+      .then(res => res.json())
+      .then(data => setAllPatients(data.patients || []));
+  }, []);
 
   const getTriageIcon = (level: string) => {
     switch (level) {
